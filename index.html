@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Timer Corde à Sauter - Interval Training</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Chakra Petch"', 'monospace'],
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --app-height: 100dvh;
+    }
+    @supports not (height: 100dvh) {
+      :root {
+        --app-height: 100vh;
+      }
+    }
+    #appBody {
+      height: var(--app-height);
+      min-height: var(--app-height);
+      max-height: var(--app-height);
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 9999px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.8);
+    }
+  </style>
+</head>
+<body class="flex flex-col justify-between transition-colors duration-500 bg-slate-900 select-none overflow-hidden" id="appBody">
+
+  <!-- Header / Navigation -->
+  <header class="py-2.5 px-4 flex justify-between items-center max-w-sm mx-auto w-full shrink-0">
+    <div class="flex items-center gap-2">
+      <div class="p-1.5 bg-slate-800 rounded-xl border border-slate-700/50 shadow-inner">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+      </div>
+      <h1 class="font-extrabold text-lg tracking-tight text-white">RopeTimer</h1>
+    </div>
+    
+    <div class="flex items-center gap-1.5">
+      <!-- Fullscreen Toggle Button -->
+      <button id="btnFullscreen" class="p-2 sm:p-2.5 bg-slate-800/80 hover:bg-slate-700/80 active:scale-95 rounded-xl border border-slate-700/60 shadow text-slate-300" title="Plein écran">
+        <svg id="fullscreenIconEnter" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+        </svg>
+        <svg id="fullscreenIconExit" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-300 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4l5 5m0 0H5m4 0V5m7 5l5-5m-5 5V5m0 4h4m-4 7l5 5m-5-5h4m-4 0v4M9 15l-5 5m5-5v4m0-4H5"></path>
+        </svg>
+      </button>
+
+      <!-- Mic Toggle Quick Button -->
+      <button id="btnMicToggle" class="p-2 sm:p-2.5 bg-slate-800/80 hover:bg-slate-700/80 active:scale-95 rounded-xl border border-slate-700/60 shadow text-slate-300 relative" title="Activer / Désactiver l'écoute micro">
+        <svg id="micIconOn" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+        </svg>
+        <svg id="micIconOff" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-12.728 12.728"></path>
+        </svg>
+        <span id="micActivityPulse" class="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 hidden animate-ping"></span>
+      </button>
+
+      <!-- Voice Toggle Quick Button -->
+      <button id="btnVoiceToggle" class="p-2 sm:p-2.5 bg-slate-800/80 hover:bg-slate-700/80 active:scale-95 rounded-xl border border-slate-700/60 shadow text-slate-300" title="Activer / Désactiver la voix">
+        <svg id="voiceIconOn" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"></path>
+        </svg>
+        <svg id="voiceIconOff" class="w-4 h-4 sm:w-5 sm:h-5 text-rose-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path>
+        </svg>
+      </button>
+
+      <!-- Settings Button -->
+      <button id="btnOpenSettings" class="p-2 sm:p-2.5 bg-slate-800/80 hover:bg-slate-700/80 active:scale-95 rounded-xl border border-slate-700/60 shadow flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+        <span class="hidden xs:inline">Réglages</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Timer Display Area (Compacted to ensure perfect full-screen fit) -->
+  <main class="flex-1 flex flex-col justify-center items-center px-4 max-w-sm mx-auto w-full text-center my-auto min-h-0">
+    
+    <!-- Phase Badge -->
+    <div id="phaseBadge" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300 text-xs font-bold tracking-wider uppercase mb-2.5 shadow-lg transition-all duration-300 shrink-0">
+      <span class="w-2 h-2 rounded-full bg-slate-400 animate-pulse" id="phaseDot"></span>
+      <span id="phaseTitle">Prêt à commencer</span>
+    </div>
+
+    <!-- Digital Timer Counter -->
+    <div class="relative w-full aspect-square max-w-[220px] sm:max-w-[250px] mx-auto flex flex-col items-center justify-center rounded-3xl bg-slate-800/30 border border-white/10 backdrop-blur-md shadow-2xl p-4 cursor-pointer hover:border-white/20 transition-all shrink-0" title="Cliquer pour basculer Compte à rebours / Temps écoulé">
+      
+      <!-- Display Remaining / Elapsed Time in Phase -->
+      <div id="timeLabel" class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-0.5">Temps Restant</div>
+      <div id="timeDisplay" class="font-mono text-6xl sm:text-7xl font-extrabold tracking-tight text-white drop-shadow-md leading-none my-1">
+        00s
+      </div>
+
+      <!-- Current Cycle Indicator -->
+      <div class="mt-3 pt-2.5 border-t border-white/10 w-full flex justify-between items-center px-3">
+        <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Cycles Répétés</span>
+        <span id="cycleDisplay" class="font-mono font-bold text-sm text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg">
+          0 / 10
+        </span>
+      </div>
+    </div>
+
+    <!-- Quick Summary Cards -->
+    <div class="grid grid-cols-3 gap-2 w-full mt-2.5 text-[11px] font-medium shrink-0">
+      <div class="bg-slate-800/60 border border-slate-700/50 p-2 rounded-xl flex flex-col items-center">
+        <span class="text-slate-400 text-[10px] mb-0.5">Activité</span>
+        <span id="sumActivity" class="text-emerald-400 font-mono font-bold text-xs sm:text-sm">30s</span>
+      </div>
+      <div class="bg-slate-800/60 border border-slate-700/50 p-2 rounded-xl flex flex-col items-center">
+        <span class="text-slate-400 text-[10px] mb-0.5">Repos</span>
+        <span id="sumRest" class="text-sky-400 font-mono font-bold text-xs sm:text-sm">15s</span>
+      </div>
+      <div class="bg-slate-800/60 border border-slate-700/50 p-2 rounded-xl flex flex-col items-center">
+        <span class="text-slate-400 text-[10px] mb-0.5">Total</span>
+        <span id="sumTotal" class="text-amber-400 font-mono font-bold text-xs sm:text-sm">10x</span>
+      </div>
+    </div>
+
+    <!-- Live Microphone Jump Detection Card -->
+    <div id="micStatusContainer" class="w-full mt-2 bg-slate-800/60 border border-slate-700/60 rounded-xl p-2.5 flex flex-col gap-1.5 shadow-lg transition-all shrink-0">
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-slate-500 transition-colors" id="micStatusDot"></span>
+          <span id="micStatusText" class="font-semibold text-slate-300 text-[11px]">Micro : En attente</span>
+        </div>
+        <div class="flex items-center gap-1 font-mono">
+          <span class="text-slate-400 text-[10px] uppercase tracking-wider">Sauts :</span>
+          <span id="jumpCountDisplay" class="font-extrabold text-emerald-400 text-sm bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded-lg">0</span>
+        </div>
+      </div>
+
+      <!-- Live Sound Level Bar (VU Meter) -->
+      <div class="w-full bg-slate-900/90 rounded-full h-1.5 overflow-hidden flex items-center p-0.5 border border-slate-700/50">
+        <div id="micVolumeBar" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 h-full rounded-full transition-all duration-75 w-0"></div>
+      </div>
+      
+      <!-- Inactivity Warning Banner -->
+      <div id="micInactivityAlert" class="text-[10px] font-bold text-amber-300 bg-amber-950/50 border border-amber-500/30 py-0.5 px-2 rounded-lg hidden text-center animate-pulse">
+        ⚠️ Aucun saut détecté ! Reprenez le rythme !
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Controls Panel -->
+  <footer class="py-2.5 px-4 max-w-sm mx-auto w-full shrink-0 mb-1">
+    <div class="flex items-center gap-2.5">
+      <!-- Main Play/Pause Button -->
+      <button id="btnMainToggle" class="flex-1 py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-95 text-slate-950 font-extrabold text-base shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2.5 transition-all">
+        <svg id="playIcon" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <span id="playBtnText">DÉMARRER</span>
+      </button>
+
+      <!-- Reset Button -->
+      <button id="btnReset" class="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-700/80 active:scale-95 border border-slate-700/60 text-slate-300 shadow-lg transition-all" title="Réinitialiser">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+      </button>
+    </div>
+  </footer>
+
+  <!-- Settings Modal Dialog (Fixed layout with pinned action button & scrollable inputs) -->
+  <div id="settingsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden transition-opacity duration-300">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-3xl p-4 sm:p-5 w-full max-w-sm shadow-2xl flex flex-col max-h-[92dvh] animate-in fade-in zoom-in duration-200">
+      
+      <!-- Fixed Header (Never moves) -->
+      <div class="flex justify-between items-center pb-2.5 border-b border-slate-800 shrink-0">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+          </svg>
+          Paramètres de la séance
+        </h3>
+        <button id="btnCloseSettings" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Scrollable Inputs Area (Internal smooth scroll) -->
+      <div class="space-y-3.5 overflow-y-auto custom-scrollbar flex-1 py-3 pr-1">
+        
+        <!-- Occurrences Input -->
+        <div class="space-y-1">
+          <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Nombre d'occurrences (cycles)</label>
+          <div class="flex items-center gap-2.5">
+            <input type="number" id="inputOccurrences" min="1" max="99" value="10" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 font-mono text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition-colors text-sm">
+            <span class="text-xs text-slate-400 font-medium">fois</span>
+          </div>
+        </div>
+
+        <!-- Activity Time Input -->
+        <div class="space-y-1">
+          <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Temps d'activité (Effort)</label>
+          <div class="flex items-center gap-2.5">
+            <input type="number" id="inputActivity" min="1" max="3600" value="30" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 font-mono text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition-colors text-sm">
+            <span class="text-xs text-slate-400 font-medium">secondes</span>
+          </div>
+        </div>
+
+        <!-- Recovery Time Input -->
+        <div class="space-y-1">
+          <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Temps de récupération (Repos)</label>
+          <div class="flex items-center gap-2.5">
+            <input type="number" id="inputRest" min="1" max="3600" value="15" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 font-mono text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition-colors text-sm">
+            <span class="text-xs text-slate-400 font-medium">secondes</span>
+          </div>
+        </div>
+
+        <!-- Prep Time Input -->
+        <div class="space-y-1">
+          <label class="block text-[11px] font-semibold text-slate-300 uppercase tracking-wider">Préparation au départ</label>
+          <div class="flex items-center gap-2.5">
+            <input type="number" id="inputPrep" min="0" max="60" value="5" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 font-mono text-emerald-400 font-bold focus:outline-none focus:border-emerald-500 transition-colors text-sm">
+            <span class="text-xs text-slate-400 font-medium">secondes</span>
+          </div>
+        </div>
+
+        <!-- Voice & Audio Options -->
+        <div class="pt-2.5 border-t border-slate-800 space-y-2.5">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Coach Vocal (Français)</div>
+          
+          <label class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
+            <span class="text-xs font-semibold text-slate-200">Activer les annonces vocales</span>
+            <input type="checkbox" id="inputVoiceEnabled" checked class="w-4 h-4 text-emerald-500 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+          </label>
+
+          <label class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
+            <div class="flex flex-col">
+              <span class="text-xs font-semibold text-slate-200">Décompte toutes les 5s</span>
+              <span class="text-[10px] text-slate-400">Pendant la phase de saut</span>
+            </div>
+            <input type="checkbox" id="inputVoice5s" checked class="w-4 h-4 text-emerald-500 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+          </label>
+
+          <label class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
+            <span class="text-xs font-semibold text-slate-200">Mode compte à rebours</span>
+            <input type="checkbox" id="inputCountdownMode" checked class="w-4 h-4 text-emerald-500 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+          </label>
+        </div>
+
+        <!-- Microphone Detection Options -->
+        <div class="pt-2.5 border-t border-slate-800 space-y-2.5">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Détection Micro (Saut à la corde)</div>
+          
+          <label class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
+            <div class="flex flex-col">
+              <span class="text-xs font-semibold text-slate-200">Écoute des sauts par micro</span>
+              <span class="text-[10px] text-slate-400">Capte les claquements de la corde</span>
+            </div>
+            <input type="checkbox" id="inputMicEnabled" checked class="w-4 h-4 text-emerald-500 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+          </label>
+
+          <label class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 cursor-pointer hover:bg-slate-800 transition-colors">
+            <div class="flex flex-col">
+              <span class="text-xs font-semibold text-slate-200">Alerte inactivité (3s)</span>
+              <span class="text-[10px] text-slate-400">"Allez, courage, il faut sauter"</span>
+            </div>
+            <input type="checkbox" id="inputMicAlert" checked class="w-4 h-4 text-emerald-500 rounded bg-slate-700 border-slate-600 focus:ring-emerald-500">
+          </label>
+
+          <div class="space-y-1.5 p-2 rounded-xl bg-slate-800/60 border border-slate-700/60">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-semibold text-slate-200">Sensibilité du micro</span>
+              <span id="sensitivityValLabel" class="font-mono text-emerald-400 font-bold">28%</span>
+            </div>
+            <input type="range" id="inputMicSensitivity" min="10" max="60" value="28" class="w-full accent-emerald-500 cursor-pointer">
+            <div class="flex justify-between text-[10px] text-slate-500">
+              <span>Tranquille (Sol dur)</span>
+              <span>Sensible (Tapis)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pinned Footer Button: ALWAYS visible and accessible without scrolling! -->
+      <div class="pt-3 border-t border-slate-800 shrink-0">
+        <button id="btnSaveSettings" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold rounded-xl transition-all shadow-lg shadow-emerald-900/40 text-sm">
+          Enregistrer et Appliquer
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Application Logic JS -->
+  <script>
+    // --- Application State ---
+    const STATE = {
+      IDLE: 'IDLE',
+      PREP: 'PREP',        // Préparation au départ (ex: 5s)
+      WORK: 'WORK',        // Activité / Saut à la corde
+      REST: 'REST',        // Repos / Récupération
+      PAUSED: 'PAUSED',
+      FINISHED: 'FINISHED'
+    };
+
+    const STORAGE_KEY = 'jump_rope_timer_config_v3';
+
+    let config = {
+      occurrences: 10,
+      activitySeconds: 30,
+      restSeconds: 15,
+      prepSeconds: 5,
+      voiceEnabled: true,
+      voice5s: true,
+      countdownMode: true,
+      micEnabled: true,
+      micAlert: true,
+      micSensitivity: 28
+    };
+
+    // Load persisted configuration
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        config = Object.assign(config, JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn("Impossible de charger les paramètres locaux", e);
+    }
+
+    let currentState = STATE.IDLE;
+    let previousState = STATE.IDLE; // To resume after pause
+    let currentCycle = 0;           // Current cycle count (1-based when running)
+    let elapsedPhaseSeconds = 0;   // Seconds elapsed in current phase
+    let timerInterval = null;
+    let wakeLock = null;
+
+    // --- Audio Synthesizer (Web Audio API) ---
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playBeep(duration = 200, frequency = 880) {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.3, audioCtx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (duration / 1000));
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + (duration / 1000));
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+
+    function playShortBeep() {
+      playBeep(200, 880); // 880Hz (A5)
+    }
+
+    function playLongBeep() {
+      playBeep(700, 587.33); // 587Hz (D5)
+    }
+
+    function playFinishedBeeps() {
+      let count = 0;
+      const interval = setInterval(() => {
+        playBeep(600, 1046.50); // C6
+        count++;
+        if (count >= 3) {
+          clearInterval(interval);
+        }
+      }, 750);
+    }
+
+    // --- Web Speech API (Voix française) ---
+    let frenchVoice = null;
+
+    function loadFrenchVoice() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      frenchVoice = voices.find(v => v.lang === 'fr-FR' && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Premium'))) ||
+                    voices.find(v => v.lang === 'fr-FR') ||
+                    voices.find(v => v.lang.startsWith('fr')) ||
+                    null;
+    }
+
+    if ('speechSynthesis' in window) {
+      loadFrenchVoice();
+      window.speechSynthesis.onvoiceschanged = loadFrenchVoice;
+    }
+
+    function speak(text, cancelCurrent = false) {
+      if (!config.voiceEnabled || !('speechSynthesis' in window)) return;
+      try {
+        if (cancelCurrent) {
+          window.speechSynthesis.cancel();
+        }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'fr-FR';
+        utterance.rate = 1.15; // Tonique pour le sport
+        utterance.pitch = 1.0;
+        if (frenchVoice) {
+          utterance.voice = frenchVoice;
+        }
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.warn("Erreur de synthèse vocale:", e);
+      }
+    }
+
+    function unlockAudioAndSpeech() {
+      initAudio();
+      if ('speechSynthesis' in window) {
+        const dummy = new SpeechSynthesisUtterance('');
+        window.speechSynthesis.speak(dummy);
+      }
+    }
+
+    // --- Microphone Jump Detection Engine ---
+    let micStream = null;
+    let micSource = null;
+    let micAnalyser = null;
+    let micDataArray = null;
+    let isMicActive = false;
+    let jumpCountTotal = 0;
+    let jumpCountInCurrentPhase = 0;
+    let hadInactivityPause = false;
+    let lastJumpTimestamp = 0;
+    let lastInactivityWarningTimestamp = 0;
+    let micAnimFrame = null;
+    let jumpPulseTimeout = null;
+
+    async function initMicrophone() {
+      if (!config.micEnabled) return;
+      if (micStream && micAnalyser) {
+        isMicActive = true;
+        updateMicUI();
+        startMicLoop();
+        return;
+      }
+
+      try {
+        initAudio();
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          },
+          video: false
+        });
+        micStream = stream;
+        micSource = audioCtx.createMediaStreamSource(stream);
+        micAnalyser = audioCtx.createAnalyser();
+        micAnalyser.fftSize = 256;
+        micAnalyser.smoothingTimeConstant = 0.2;
+        micSource.connect(micAnalyser);
+        micDataArray = new Uint8Array(micAnalyser.frequencyBinCount);
+        isMicActive = true;
+        updateMicUI();
+        startMicLoop();
+      } catch (err) {
+        console.warn("Accès microphone non disponible ou refusé:", err);
+        isMicActive = false;
+        updateMicUI();
+      }
+    }
+
+    function stopMicrophone() {
+      isMicActive = false;
+      if (micAnimFrame) {
+        cancelAnimationFrame(micAnimFrame);
+        micAnimFrame = null;
+      }
+      if (micVolumeBar) micVolumeBar.style.width = '0%';
+      updateMicUI();
+    }
+
+    function startMicLoop() {
+      if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
+
+      function loop() {
+        if (!isMicActive || !micAnalyser) {
+          if (micVolumeBar) micVolumeBar.style.width = '0%';
+          return;
+        }
+
+        micAnalyser.getByteFrequencyData(micDataArray);
+
+        // Analyse des fréquences pour capter l'impact (claquement corde / sol)
+        let peak = 0;
+        for (let i = 4; i < 60; i++) {
+          const val = micDataArray[i] || 0;
+          if (val > peak) peak = val;
+        }
+        const volumePercent = Math.min(100, Math.round((peak / 255) * 100));
+
+        // Mise à jour de la jauge visuelle (VU mètre)
+        if (micVolumeBar) {
+          micVolumeBar.style.width = `${volumePercent}%`;
+        }
+
+        const threshold = config.micSensitivity || 28;
+        const now = Date.now();
+        const isSpeaking = ('speechSynthesis' in window) && window.speechSynthesis.speaking;
+
+        // Saut détecté si le volume dépasse le seuil, l'app ne parle pas, et délai anti-rebond (> 260ms)
+        if (volumePercent >= threshold && !isSpeaking && (now - lastJumpTimestamp > 260)) {
+          lastJumpTimestamp = now;
+          jumpCountTotal++;
+          jumpCountInCurrentPhase++;
+          if (jumpCountDisplay) jumpCountDisplay.textContent = jumpCountTotal;
+          triggerJumpPulse();
+
+          if (micInactivityAlert) micInactivityAlert.classList.add('hidden');
+        }
+
+        // Vérification d'inactivité pendant la phase d'effort WORK
+        if (currentState === STATE.WORK && config.micEnabled && config.micAlert) {
+          const timeSinceLastJump = (now - lastJumpTimestamp) / 1000;
+          // Si on n'entend pas de saut pendant 3 secondes
+          if (timeSinceLastJump >= 3 && (now - lastInactivityWarningTimestamp > 4500)) {
+            hadInactivityPause = true;
+            lastInactivityWarningTimestamp = now;
+            let warningText = "";
+            if (jumpCountInCurrentPhase === 0) {
+              // Au démarrage de la phase, la personne n'a pas encore sauté
+              warningText = "Allez, courage s'il vous plaît, il faut sauter";
+            } else {
+              // La personne sautait mais s'est arrêtée depuis 3 secondes
+              warningText = "Allez, courage, il faut sauter";
+            }
+
+            if (micInactivityAlert) {
+              micInactivityAlert.textContent = "⚠️ " + warningText;
+              micInactivityAlert.classList.remove('hidden');
+            }
+            speak(warningText, true);
+          }
+        } else {
+          if (micInactivityAlert) micInactivityAlert.classList.add('hidden');
+        }
+
+        micAnimFrame = requestAnimationFrame(loop);
+      }
+
+      micAnimFrame = requestAnimationFrame(loop);
+    }
+
+    function triggerJumpPulse() {
+      if (!micStatusContainer) return;
+      micStatusContainer.classList.add('border-emerald-400', 'bg-emerald-950/40');
+      if (micActivityPulse) micActivityPulse.classList.remove('hidden');
+      
+      clearTimeout(jumpPulseTimeout);
+      jumpPulseTimeout = setTimeout(() => {
+        micStatusContainer.classList.remove('border-emerald-400', 'bg-emerald-950/40');
+        if (micActivityPulse) micActivityPulse.classList.add('hidden');
+      }, 180);
+    }
+
+    function updateMicUI() {
+      if (!btnMicToggle) return;
+      if (!config.micEnabled) {
+        micIconOn.classList.add('hidden');
+        micIconOff.classList.remove('hidden');
+        btnMicToggle.classList.replace('text-emerald-400', 'text-slate-500');
+        micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-slate-600";
+        micStatusText.textContent = "Micro : Désactivé";
+        micVolumeBar.style.width = '0%';
+        if (micInactivityAlert) micInactivityAlert.classList.add('hidden');
+      } else if (isMicActive) {
+        micIconOn.classList.remove('hidden');
+        micIconOff.classList.add('hidden');
+        btnMicToggle.classList.replace('text-slate-500', 'text-emerald-400');
+        micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+        micStatusText.textContent = "Micro : À l'écoute des sauts";
+      } else {
+        micIconOn.classList.remove('hidden');
+        micIconOff.classList.add('hidden');
+        btnMicToggle.classList.replace('text-slate-500', 'text-amber-400');
+        micStatusDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+        micStatusText.textContent = "Micro : Prêt au démarrage";
+        micVolumeBar.style.width = '0%';
+      }
+    }
+
+    // --- Screen Wake Lock (Garder l'écran allumé) ---
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (err) {
+          console.log('Wake Lock non activé:', err);
+        }
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+        wakeLock = null;
+      }
+    }
+
+    // --- DOM Elements ---
+    const appBody = document.getElementById('appBody');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const timeLabel = document.getElementById('timeLabel');
+    const cycleDisplay = document.getElementById('cycleDisplay');
+    const phaseTitle = document.getElementById('phaseTitle');
+    const phaseBadge = document.getElementById('phaseBadge');
+    const phaseDot = document.getElementById('phaseDot');
+    
+    const sumActivity = document.getElementById('sumActivity');
+    const sumRest = document.getElementById('sumRest');
+    const sumTotal = document.getElementById('sumTotal');
+
+    const btnMainToggle = document.getElementById('btnMainToggle');
+    const playBtnText = document.getElementById('playBtnText');
+    const playIcon = document.getElementById('playIcon');
+    const btnReset = document.getElementById('btnReset');
+
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    const fullscreenIconEnter = document.getElementById('fullscreenIconEnter');
+    const fullscreenIconExit = document.getElementById('fullscreenIconExit');
+
+    const btnMicToggle = document.getElementById('btnMicToggle');
+    const micIconOn = document.getElementById('micIconOn');
+    const micIconOff = document.getElementById('micIconOff');
+    const micActivityPulse = document.getElementById('micActivityPulse');
+
+    const micStatusContainer = document.getElementById('micStatusContainer');
+    const micStatusDot = document.getElementById('micStatusDot');
+    const micStatusText = document.getElementById('micStatusText');
+    const jumpCountDisplay = document.getElementById('jumpCountDisplay');
+    const micVolumeBar = document.getElementById('micVolumeBar');
+    const micInactivityAlert = document.getElementById('micInactivityAlert');
+
+    const btnVoiceToggle = document.getElementById('btnVoiceToggle');
+    const voiceIconOn = document.getElementById('voiceIconOn');
+    const voiceIconOff = document.getElementById('voiceIconOff');
+
+    const settingsModal = document.getElementById('settingsModal');
+    const btnOpenSettings = document.getElementById('btnOpenSettings');
+    const btnCloseSettings = document.getElementById('btnCloseSettings');
+    const btnSaveSettings = document.getElementById('btnSaveSettings');
+
+    const inputOccurrences = document.getElementById('inputOccurrences');
+    const inputActivity = document.getElementById('inputActivity');
+    const inputRest = document.getElementById('inputRest');
+    const inputPrep = document.getElementById('inputPrep');
+    const inputVoiceEnabled = document.getElementById('inputVoiceEnabled');
+    const inputVoice5s = document.getElementById('inputVoice5s');
+    const inputCountdownMode = document.getElementById('inputCountdownMode');
+
+    const inputMicEnabled = document.getElementById('inputMicEnabled');
+    const inputMicAlert = document.getElementById('inputMicAlert');
+    const inputMicSensitivity = document.getElementById('inputMicSensitivity');
+    const sensitivityValLabel = document.getElementById('sensitivityValLabel');
+
+    // --- UI Update Functions ---
+
+    function updateSummaryDisplay() {
+      sumActivity.textContent = `${config.activitySeconds}s`;
+      sumRest.textContent = `${config.restSeconds}s`;
+      sumTotal.textContent = `${config.occurrences}x`;
+    }
+
+    function updateVoiceIcons() {
+      if (config.voiceEnabled) {
+        voiceIconOn.classList.remove('hidden');
+        voiceIconOff.classList.add('hidden');
+        btnVoiceToggle.classList.replace('text-rose-400', 'text-slate-300');
+      } else {
+        voiceIconOn.classList.add('hidden');
+        voiceIconOff.classList.remove('hidden');
+        btnVoiceToggle.classList.replace('text-slate-300', 'text-rose-400');
+      }
+    }
+
+    function getDisplaySeconds() {
+      if (currentState === STATE.IDLE) {
+        return config.countdownMode ? config.activitySeconds : 0;
+      }
+      if (currentState === STATE.FINISHED) {
+        return 0;
+      }
+
+      let totalPhaseSeconds = config.activitySeconds;
+      if (currentState === STATE.PREP) totalPhaseSeconds = config.prepSeconds;
+      else if (currentState === STATE.REST) totalPhaseSeconds = config.restSeconds;
+      else if (previousState === STATE.PREP) totalPhaseSeconds = config.prepSeconds;
+      else if (previousState === STATE.REST) totalPhaseSeconds = config.restSeconds;
+
+      if (config.countdownMode) {
+        const remaining = Math.max(0, totalPhaseSeconds - elapsedPhaseSeconds);
+        return remaining;
+      } else {
+        return elapsedPhaseSeconds;
+      }
+    }
+
+    function updateTimerUI() {
+      const displaySec = getDisplaySeconds();
+      timeDisplay.textContent = `${displaySec.toString().padStart(2, '0')}s`;
+      timeLabel.textContent = config.countdownMode ? "Temps Restant" : "Temps Écoulé";
+      
+      cycleDisplay.textContent = `${currentCycle} / ${config.occurrences}`;
+
+      if (currentState === STATE.WORK) {
+        appBody.className = "flex flex-col justify-between transition-colors duration-500 bg-emerald-600 text-white select-none overflow-hidden";
+        phaseTitle.textContent = (currentCycle === config.occurrences) ? "DERNIER TOUR ! (Sautez)" : "ACTIVITÉ ! (Sautez)";
+        phaseBadge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-900/60 border border-emerald-400/40 text-emerald-100 text-xs font-bold tracking-wider uppercase mb-2.5 shadow-lg shrink-0";
+        phaseDot.className = "w-2 h-2 rounded-full bg-emerald-300 animate-ping";
+      } 
+      else if (currentState === STATE.PREP) {
+        appBody.className = "flex flex-col justify-between transition-colors duration-500 bg-slate-900 text-slate-100 select-none overflow-hidden";
+        phaseTitle.textContent = "PRÉPARATION - À VOS CORDES";
+        phaseBadge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs font-bold tracking-wider uppercase mb-2.5 shadow-lg shrink-0";
+        phaseDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+      }
+      else if (currentState === STATE.REST) {
+        appBody.className = "flex flex-col justify-between transition-colors duration-500 bg-slate-900 text-slate-100 select-none overflow-hidden";
+        phaseTitle.textContent = "RÉCUPÉRATION (Soufflez)";
+        phaseBadge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-950/80 border border-sky-500/40 text-sky-300 text-xs font-bold tracking-wider uppercase mb-2.5 shadow-lg shrink-0";
+        phaseDot.className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse";
+      } 
+      else if (currentState === STATE.FINISHED) {
+        appBody.className = "flex flex-col justify-between transition-colors duration-500 bg-slate-900 text-slate-100 select-none overflow-hidden";
+        phaseTitle.textContent = "SÉANCE TERMINÉE ! BRAVO !";
+        phaseBadge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs font-bold tracking-wider uppercase mb-2.5 shadow-lg shrink-0";
+        phaseDot.className = "w-2 h-2 rounded-full bg-amber-400";
+      } 
+      else if (currentState === STATE.PAUSED) {
+        phaseTitle.textContent = "PAUSE";
+        phaseDot.className = "w-2 h-2 rounded-full bg-amber-400";
+      } 
+      else { // IDLE
+        appBody.className = "flex flex-col justify-between transition-colors duration-500 bg-slate-900 text-slate-100 select-none overflow-hidden";
+        phaseTitle.textContent = "PRÊT À COMMENCER";
+        phaseBadge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold tracking-wider uppercase mb-2.5 shadow-lg shrink-0";
+        phaseDot.className = "w-2 h-2 rounded-full bg-slate-500";
+      }
+
+      // Button Text & Icon
+      if (currentState === STATE.WORK || currentState === STATE.REST || currentState === STATE.PREP) {
+        playBtnText.textContent = "PAUSE";
+        playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+      } else if (currentState === STATE.PAUSED) {
+        playBtnText.textContent = "REPRENDRE";
+        playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+      } else {
+        playBtnText.textContent = "DÉMARRER";
+        playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+      }
+    }
+
+    // --- Core Timer Logic ---
+
+    async function startTimer() {
+      unlockAudioAndSpeech();
+      requestWakeLock();
+
+      if (config.micEnabled) {
+        await initMicrophone();
+      }
+
+      lastJumpTimestamp = Date.now();
+      lastInactivityWarningTimestamp = 0;
+      jumpCountInCurrentPhase = 0;
+
+      if (currentState === STATE.IDLE || currentState === STATE.FINISHED) {
+        elapsedPhaseSeconds = 0;
+
+        if (config.prepSeconds > 0) {
+          currentState = STATE.PREP;
+          currentCycle = 1;
+          speak("Attention, préparez-vous !", true);
+        } else {
+          currentState = STATE.WORK;
+          currentCycle = 1;
+          announceWorkStart();
+        }
+      } else if (currentState === STATE.PAUSED) {
+        currentState = previousState;
+        speak("Reprise !", true);
+      }
+
+      updateTimerUI();
+      updateMicUI();
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        tick();
+      }, 1000);
+    }
+
+    function announceWorkStart() {
+      playShortBeep();
+      jumpCountInCurrentPhase = 0;
+      hadInactivityPause = false;
+      lastJumpTimestamp = Date.now();
+      lastInactivityWarningTimestamp = 0;
+      if (currentCycle === config.occurrences) {
+        speak("Dernier tour ! Donnez tout !", true);
+      } else {
+        speak("C'est parti, sautez !", true);
+      }
+    }
+
+    function pauseTimer() {
+      if (currentState === STATE.WORK || currentState === STATE.REST || currentState === STATE.PREP) {
+        previousState = currentState;
+        currentState = STATE.PAUSED;
+        clearInterval(timerInterval);
+        releaseWakeLock();
+        speak("Pause", true);
+        updateTimerUI();
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      releaseWakeLock();
+      stopMicrophone();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      currentState = STATE.IDLE;
+      currentCycle = 0;
+      elapsedPhaseSeconds = 0;
+      jumpCountTotal = 0;
+      jumpCountInCurrentPhase = 0;
+      hadInactivityPause = false;
+      if (jumpCountDisplay) jumpCountDisplay.textContent = '0';
+      lastJumpTimestamp = 0;
+      lastInactivityWarningTimestamp = 0;
+      updateTimerUI();
+      updateMicUI();
+    }
+
+    function tick() {
+      elapsedPhaseSeconds++;
+
+      // 1. PHASE DE PRÉPARATION
+      if (currentState === STATE.PREP) {
+        const remaining = config.prepSeconds - elapsedPhaseSeconds;
+
+        if (remaining <= 3 && remaining > 0) {
+          playShortBeep();
+          speak(String(remaining));
+        }
+
+        if (elapsedPhaseSeconds >= config.prepSeconds) {
+          currentState = STATE.WORK;
+          elapsedPhaseSeconds = 0;
+          announceWorkStart();
+        }
+      }
+
+      // 2. PHASE D'ACTIVITÉ (SAUT À LA CORDE)
+      else if (currentState === STATE.WORK) {
+        const remaining = config.activitySeconds - elapsedPhaseSeconds;
+
+        // Décompte toutes les 5 secondes pendant l'effort
+        if (config.voice5s && remaining > 3 && remaining % 5 === 0 && elapsedPhaseSeconds > 0) {
+          if (remaining === 15 && config.activitySeconds >= 30) {
+            speak("15 secondes ! Mi-parcours !");
+          } else if (remaining === 10) {
+            speak("Plus que 10 secondes !");
+          } else if (remaining === 5) {
+            speak("5 !");
+          } else {
+            speak(String(remaining));
+          }
+        }
+
+        // Compte à rebours final 3, 2, 1
+        if (remaining <= 3 && remaining > 0) {
+          playShortBeep();
+          speak(String(remaining));
+        }
+
+        // Fin du round d'activité
+        if (elapsedPhaseSeconds >= config.activitySeconds) {
+          const roundJumps = jumpCountInCurrentPhase;
+          const wasInterrupted = hadInactivityPause || (roundJumps === 0);
+          elapsedPhaseSeconds = 0;
+
+          let debriefText = "";
+          if (config.micEnabled && config.micAlert) {
+            if (wasInterrupted) {
+              debriefText = `Attention, vous n'avez pas été courageux, vous n'avez pas sauté tout le temps. Vous avez fait ${roundJumps} saut${roundJumps > 1 ? 's' : ''} ces dernières ${config.activitySeconds} secondes.`;
+            } else {
+              debriefText = `Bravo, vous avez été courageux ! Vous avez fait ${roundJumps} sauts ces dernières ${config.activitySeconds} secondes.`;
+            }
+          }
+
+          if (currentCycle >= config.occurrences) {
+            // Séance terminée
+            clearInterval(timerInterval);
+            releaseWakeLock();
+            stopMicrophone();
+            currentState = STATE.FINISHED;
+            playFinishedBeeps();
+            const finishMsg = debriefText ? `${debriefText} Séance terminée ! Félicitations !` : "Séance terminée ! Félicitations !";
+            speak(finishMsg, true);
+          } else {
+            // Passage en repos
+            currentState = STATE.REST;
+            playLongBeep();
+            const restMsg = debriefText ? `Repos ! ${debriefText}` : "Repos ! Soufflez !";
+            speak(restMsg, true);
+          }
+        }
+      }
+
+      // 3. PHASE DE RÉCUPÉRATION / REPOS
+      else if (currentState === STATE.REST) {
+        const remaining = config.restSeconds - elapsedPhaseSeconds;
+
+        // Annonce 3, 2, 1 avant la reprise
+        if (remaining <= 3 && remaining > 0) {
+          playBeep(180, 750);
+          speak(String(remaining));
+        }
+
+        // Fin de récupération -> Prochain round
+        if (elapsedPhaseSeconds >= config.restSeconds) {
+          currentCycle++;
+          currentState = STATE.WORK;
+          elapsedPhaseSeconds = 0;
+          announceWorkStart();
+        }
+      }
+
+      updateTimerUI();
+    }
+
+    // --- Event Listeners ---
+
+    btnMainToggle.addEventListener('click', () => {
+      if (currentState === STATE.WORK || currentState === STATE.REST || currentState === STATE.PREP) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    btnReset.addEventListener('click', () => {
+      resetTimer();
+    });
+
+    // Quick Mic Toggle
+    btnMicToggle.addEventListener('click', async () => {
+      unlockAudioAndSpeech();
+      config.micEnabled = !config.micEnabled;
+      saveConfig();
+      if (config.micEnabled) {
+        await initMicrophone();
+        speak("Micro activé");
+      } else {
+        stopMicrophone();
+        speak("Micro désactivé");
+      }
+      updateMicUI();
+    });
+
+    // Quick Voice Toggle
+    btnVoiceToggle.addEventListener('click', () => {
+      unlockAudioAndSpeech();
+      config.voiceEnabled = !config.voiceEnabled;
+      updateVoiceIcons();
+      saveConfig();
+      if (config.voiceEnabled) {
+        speak("Voix activée");
+      }
+    });
+
+    // Toggle Countdown mode on clicking the timer
+    timeDisplay.parentElement.addEventListener('click', () => {
+      config.countdownMode = !config.countdownMode;
+      saveConfig();
+      updateTimerUI();
+    });
+
+    // Settings Modal Handlers
+    btnOpenSettings.addEventListener('click', () => {
+      pauseTimer();
+      inputOccurrences.value = config.occurrences;
+      inputActivity.value = config.activitySeconds;
+      inputRest.value = config.restSeconds;
+      inputPrep.value = config.prepSeconds;
+      inputVoiceEnabled.checked = config.voiceEnabled;
+      inputVoice5s.checked = config.voice5s;
+      inputCountdownMode.checked = config.countdownMode;
+      inputMicEnabled.checked = config.micEnabled;
+      inputMicAlert.checked = config.micAlert;
+      inputMicSensitivity.value = config.micSensitivity;
+      sensitivityValLabel.textContent = `${config.micSensitivity}%`;
+      settingsModal.classList.remove('hidden');
+    });
+
+    btnCloseSettings.addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+    });
+
+    // Close modal when clicking on dark backdrop
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) {
+        settingsModal.classList.add('hidden');
+      }
+    });
+
+    inputMicSensitivity.addEventListener('input', () => {
+      sensitivityValLabel.textContent = `${inputMicSensitivity.value}%`;
+    });
+
+    btnSaveSettings.addEventListener('click', () => {
+      const occ = parseInt(inputOccurrences.value, 10);
+      const act = parseInt(inputActivity.value, 10);
+      const rst = parseInt(inputRest.value, 10);
+      const prp = parseInt(inputPrep.value, 10);
+      const sens = parseInt(inputMicSensitivity.value, 10);
+
+      if (occ > 0 && act > 0 && rst > 0 && prp >= 0) {
+        config.occurrences = occ;
+        config.activitySeconds = act;
+        config.restSeconds = rst;
+        config.prepSeconds = prp;
+        config.voiceEnabled = inputVoiceEnabled.checked;
+        config.voice5s = inputVoice5s.checked;
+        config.countdownMode = inputCountdownMode.checked;
+        config.micEnabled = inputMicEnabled.checked;
+        config.micAlert = inputMicAlert.checked;
+        config.micSensitivity = sens || 28;
+
+        saveConfig();
+        updateVoiceIcons();
+        updateMicUI();
+        updateSummaryDisplay();
+        resetTimer();
+        settingsModal.classList.add('hidden');
+      }
+    });
+
+    function saveConfig() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+      } catch (e) {
+        console.warn("Erreur sauvegarde locale:", e);
+      }
+    }
+
+    // Fullscreen Toggle
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    });
+
+    function updateFullscreenIcons() {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      fullscreenIconEnter.classList.toggle('hidden', isFs);
+      fullscreenIconExit.classList.toggle('hidden', !isFs);
+    }
+
+    document.addEventListener('fullscreenchange', updateFullscreenIcons);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+
+    // Dynamic Viewport Height & Browser Adjustment
+    function adjustViewportHeight() {
+      const vh = window.innerHeight;
+      document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    }
+
+    window.addEventListener('resize', adjustViewportHeight);
+    window.addEventListener('orientationchange', adjustViewportHeight);
+    adjustViewportHeight();
+
+    // Initialize UI
+    updateVoiceIcons();
+    updateMicUI();
+    updateSummaryDisplay();
+    updateTimerUI();
+  </script>
+</body>
+</html>
